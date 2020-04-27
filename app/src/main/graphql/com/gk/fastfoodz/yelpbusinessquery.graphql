@@ -1,0 +1,10 @@
+query YelpBusinessQuery($id : String!)
+{
+    business(id: $id) {
+        name
+        id
+        alias
+        rating
+        url
+    }
+}

@@ -1,0 +1,29 @@
+query YelpSearchQuery($term: String!, $radius: Float!, $latitude: Float!, $longitude: Float!, $sortby: String!)
+{
+    search(term: $term, radius: $radius, latitude: $latitude, longitude: $longitude, sort_by: $sortby)
+    {
+        total
+        business {
+          id
+          name
+          phone
+          price
+          distance
+          categories{
+            title
+            alias
+          }
+          coordinates{
+            latitude
+            longitude
+          }
+          location{
+            formatted_address
+          }
+          photos
+          reviews {
+            text
+          }
+        }
+    }
+}
