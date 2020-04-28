@@ -122,8 +122,7 @@ class FFLocationManager(private val mainActivity: MainActivity) : LifecycleObser
             val lr = LocationRequest()
             lr.apply {
                 priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                interval = 0
-                fastestInterval = 0
+                interval = 10000
             }
 
             locationClient.requestLocationUpdates(
@@ -135,6 +134,7 @@ class FFLocationManager(private val mainActivity: MainActivity) : LifecycleObser
     }
 
     override fun onLocationResult(locationResult: LocationResult?) {
+        Log.i("fastfoodz", "Location Updated")
         val location =
             locationResult?.locations?.first()?.let { loc -> loc } ?: return
 
@@ -146,6 +146,7 @@ class FFLocationManager(private val mainActivity: MainActivity) : LifecycleObser
 
         // new location and its not the same as the last received location
         lastReceivedLocation = location
+        Log.i("fastfoodz", "Querying")
         fetchBusinesses(location)
     }
 
