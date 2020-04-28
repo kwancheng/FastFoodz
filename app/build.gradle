@@ -6,11 +6,6 @@ apply plugin: 'androidx.navigation.safeargs'
 apply plugin: 'com.apollographql.apollo'
 
 android {
-    signingConfigs {
-        debug {
-            storeFile file('~/.android/debug.keystore')
-        }
-    }
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 

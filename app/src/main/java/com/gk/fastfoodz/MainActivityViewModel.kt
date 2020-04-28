@@ -41,4 +41,11 @@ class MainActivityViewModel : ViewModel() {
     fun update(businesses: List<Business>) {
         _businesses.value = businesses
     }
+
+    private val _hasLocationPermission = MutableLiveData<Boolean>()
+    val hasLocationPermission : LiveData<Boolean>
+        get() = _hasLocationPermission
+    fun updateHasLocationPermission( hasPermission: Boolean) {
+        _hasLocationPermission.value = hasPermission
+    }
 }

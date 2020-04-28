@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.FragmentNavigatorExtras
@@ -37,17 +38,32 @@ class BusinessListingFragment : Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
 
         adapter = BusinessCardListingAdapter { model, rootview ->
-            val direction = BusinessListingFragmentDirections.
-            actionBusinessListingFragmentToBusinessDetailsFragment(model.business, model.business.name ?: "")
+            val hasLocationPermission = mainActivityViewModel.hasLocationPermission.value?.let{it} ?: false
 
-            val extras = FragmentNavigatorExtras(
-                rootview to rootview.transitionName
-            )
+            if (hasLocationPermission) {
+                val direction = BusinessListingFragmentDirections.
+                actionBusinessListingFragmentToBusinessDetailsFragment(model.business, model.business.name ?: "")
 
-            findNavController().navigate(direction, extras)
+                val extras = FragmentNavigatorExtras(
+                    rootview to rootview.transitionName
+                )
+
+                findNavController().navigate(direction, extras)
+            } else {
+                val text = "Need Location Permission before details can be shown"
+                val duration = Toast.LENGTH_SHORT
+
+                val toast = Toast.makeText(requireContext(), text, duration)
+                toast.show()
+            }
         }
         binding.businessList.adapter = adapter
 
+        return binding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
         mainActivityViewModel = ViewModelProvider(activity!!).get(MainActivityViewModel::class.java)
         mainActivityViewModel.businesses.observe(viewLifecycleOwner, Observer {businesses ->
             adapter.businesses = businesses
@@ -57,7 +73,6 @@ class BusinessListingFragment : Fragment() {
             adapter.businesses = businesses
         }
 
-        return binding.root
     }
     
 }
