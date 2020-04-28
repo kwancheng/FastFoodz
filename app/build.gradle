@@ -1,17 +1,11 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'androidx.navigation.safeargs'
 apply plugin: 'com.apollographql.apollo'
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
-
-    dataBinding {
-        enabled = true
-    }
 
     defaultConfig {
         applicationId "com.gk.fastfoodz"
@@ -19,8 +13,8 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -30,6 +24,11 @@ android {
         }
     }
 
+    dataBinding {
+        enabled = true
+    }
+
+    // Java Version 1.8 is needed for OkHttp
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -40,70 +39,41 @@ android {
     }
 }
 
-apollo {
-    generateKotlinModels.set(true)
-}
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    // Kotlin
+    implementation "androidx.legacy:legacy-support-v4:$version_legacy_support"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$version_kotlin"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version_kotlin_coroutines"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$version_kotlin_coroutines"
-
-    // Constraint Layout
+    implementation "androidx.appcompat:appcompat:$version_app_compat"
+    implementation "androidx.core:core-ktx:$version_kotlin_core"
     implementation "androidx.constraintlayout:constraintlayout:$version_constraint_layout"
 
-    // AppCompat
-    implementation "androidx.appcompat:appcompat:$version_app_compat"
-    implementation "androidx.appcompat:appcompat-resources:$version_app_compat"
+    // Materials
+    implementation "com.google.android.material:material:$version_material"
 
-    // Android KTX
-    implementation "androidx.core:core-ktx:$version_ktx"
+    // Kotlin Navigation Component
+    implementation "androidx.navigation:navigation-fragment-ktx:$version_navigation"
+    implementation "androidx.navigation:navigation-ui-ktx:$version_navigation"
 
-    // Navigation
-    implementation "android.arch.navigation:navigation-fragment-ktx:$version_navigation"
-    implementation "android.arch.navigation:navigation-ui-ktx:$version_navigation"
-
-    // Room Stuff
-    implementation "androidx.room:room-runtime:$version_room"
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
-    kapt "androidx.room:room-compiler:$version_room"
-    implementation "androidx.room:room-ktx:$version_room"
-
-    // Life Cycles
+    // Kotlin Lifecycle
     implementation "androidx.lifecycle:lifecycle-extensions:$version_lifecycle"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$version_lifecycle"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$version_lifecycle"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$version_lifecycle"
+    implementation "androidx.lifecycle:lifecycle-process:$version_lifecycle"
 
-    // Work Manager
-    implementation "androidx.work:work-runtime-ktx:$version_work"
-
-    // Recycler View
-    implementation "androidx.recyclerview:recyclerview:$version_recycler_view"
-
-    // Card View
-    implementation "androidx.cardview:cardview:$version_card_view"
-
-    // Retrofit
-//    implementation "com.squareup.retrofit2:retrofit:$version_retrofit"
-//    implementation "com.squareup.retrofit2:converter-moshi:$version_retrofit"
-
-    // Moshi
-    implementation "com.squareup.moshi:moshi:$version_moshi"
-    implementation "com.squareup.moshi:moshi-kotlin:$version_moshi"
-
-    // Apollo GraphQL
-    implementation "com.apollographql.apollo:apollo-runtime:$version_apollo"
+    // View Pager 2
+    implementation "androidx.viewpager2:viewpager2:$version_view_pager_2"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
 
     // Google Location
     implementation "com.google.android.gms:play-services-location:$version_google_location"
     implementation "com.google.android.gms:play-services-maps:$version_google_location"
 
+    // Apollo GraphQL
+    implementation "com.apollographql.apollo:apollo-runtime:$version_apollo"
+
     // OKHttp
     implementation "com.squareup.okhttp3:okhttp:$version_okhttp"
-    implementation 'com.google.android.gms:play-services-maps:17.0.0'
 }

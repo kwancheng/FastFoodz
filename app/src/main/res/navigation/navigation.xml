@@ -3,43 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation"
-    app:startDestination="@id/loaderFragment">
+    app:startDestination="@id/businessesListFragment">
 
     <fragment
-        android:id="@+id/businessListingFragment"
-        android:name="com.gk.fastfoodz.businesslisting.BusinessListingFragment"
-        android:label="Fast Foodz"
-        tools:layout="@layout/business_listing_fragment">
+        android:id="@+id/businessesListFragment"
+        android:name="com.gk.fastfoodz.businesseslist.BusinessesListFragment"
+        android:label="BusinessesListFragment"
+        tools:layout="@layout/businesses_list_fragment">
         <action
-            android:id="@+id/action_businessListingFragment_to_businessDetailsFragment"
-            app:destination="@id/businessDetailsFragment"
-            app:enterAnim="@anim/fragment_fade_enter"
-            app:exitAnim="@anim/fragment_fade_exit" />
+            android:id="@+id/action_businessesListFragment_to_businessDetailFragment"
+            app:destination="@id/businessDetailFragment" />
     </fragment>
     <fragment
-        android:id="@+id/businessDetailsFragment"
-        android:name="com.gk.fastfoodz.businessdetails.BusinessDetailsFragment"
-        android:label="{businessName}"
-        tools:layout="@layout/business_details_fragment">
-        <argument
-            android:name="business"
-            app:argType="com.gk.fastfoodz.network.Business" />
-        <argument
-            android:name="businessName"
-            app:argType="string" />
-    </fragment>
-    <fragment
-        android:id="@+id/loaderFragment"
-        android:name="com.gk.fastfoodz.loader.LoaderFragment"
-        tools:layout="@layout/loader_fragment">
-        <action
-            android:id="@+id/action_loaderFragment_to_businessListingFragment"
-            app:destination="@id/businessListingFragment"
-            app:popUpTo="@id/loaderFragment"
-            app:popUpToInclusive="true"
-            app:launchSingleTop="true"
-            app:enterAnim="@anim/fragment_fade_enter"
-            app:exitAnim="@anim/fragment_fade_exit"
-        />
-    </fragment>
+        android:id="@+id/businessDetailFragment"
+        android:name="com.gk.fastfoodz.businessdetail.BusinessDetailFragment"
+        android:label="BusinessDetailFragment"
+        tools:layout="@layout/business_detail_fragment" />
 </navigation>

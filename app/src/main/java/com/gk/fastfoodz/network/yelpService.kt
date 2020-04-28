@@ -4,7 +4,6 @@ import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import com.gk.fastfoodz.YelpSearchQuery
 import okhttp3.OkHttpClient
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
