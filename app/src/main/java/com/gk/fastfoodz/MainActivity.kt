@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
@@ -160,6 +161,11 @@ class FFLocationManager(private val mainActivity: MainActivity) : LifecycleObser
                 mainActivity.viewModel.update(businesses)
                 mainActivity.viewModel.update(true)
             } else {
+                val text = "Failed to Retrieve Businesses"
+                val duration = Toast.LENGTH_SHORT
+
+                val toast = Toast.makeText(mainActivity, text, duration)
+                toast.show()
                 lastReceivedLocation = null
             }
         }
