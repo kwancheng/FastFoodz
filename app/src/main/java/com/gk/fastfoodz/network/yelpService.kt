@@ -13,7 +13,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 object YelpNetwork {
-    private val httpClient = unSafeOkHttpClient()
+    private val httpClient = OkHttpClient.Builder()
         .addInterceptor {
             val original = it.request()
             val requestBuilder = original.newBuilder()
@@ -24,33 +24,6 @@ object YelpNetwork {
             it.proceed(requestBuilder.build())
         }
         .build()
-
-    fun unSafeOkHttpClient() :OkHttpClient.Builder {
-        val okHttpClient = OkHttpClient.Builder()
-        try {
-            // Create a trust manager that does not validate certificate chains
-            val trustAllCerts:  Array<TrustManager> = arrayOf(object : X509TrustManager {
-                override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?){}
-                override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
-                override fun getAcceptedIssuers(): Array<X509Certificate>  = arrayOf()
-            })
-
-            // Install the all-trusting trust manager
-            val  sslContext = SSLContext.getInstance("SSL")
-            sslContext.init(null, trustAllCerts, SecureRandom())
-
-            // Create an ssl socket factory with our all-trusting manager
-            val sslSocketFactory = sslContext.socketFactory
-            if (trustAllCerts.isNotEmpty() &&  trustAllCerts.first() is X509TrustManager) {
-                okHttpClient.sslSocketFactory(sslSocketFactory, trustAllCerts.first() as X509TrustManager)
-                okHttpClient.hostnameVerifier(HostnameVerifier { hostname, session -> true })
-            }
-
-            return okHttpClient
-        } catch (e: Exception) {
-            return okHttpClient
-        }
-    }
 
     private val apolloClient = ApolloClient.builder()
         .serverUrl("https://api.yelp.com/v3/graphql")
@@ -64,7 +37,7 @@ object YelpNetwork {
             latitude: Double,
             longitude: Double
         ): List<Business>? =
-            suspendCoroutine<List<Business>?> {
+            suspendCoroutine<List<Business>?> { continuation ->
                 val yelpSearchQuery = YelpSearchQuery(
                     term,
                     radius,
@@ -95,11 +68,11 @@ object YelpNetwork {
                                 retList.add(item)
                             }
 
-                            it.resume(retList)
+                            continuation.resume(retList)
                         }
 
                         override fun onFailure(e: ApolloException) {
-                            it.resume(null)
+                            continuation.resume(null)
                         }
                     })
             }
