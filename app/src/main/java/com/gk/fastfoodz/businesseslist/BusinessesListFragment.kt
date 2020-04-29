@@ -48,7 +48,7 @@ class BusinessesListFragment : Fragment() {
             tab.text = if (position == 1) "List" else "Map"
         }.attach()
 
-        configureInitialUI()
+        showProgressSpinner(true)
 
         return binding.root
     }
@@ -59,19 +59,14 @@ class BusinessesListFragment : Fragment() {
         mainActivityViewModel = ViewModelProvider(requireActivity()).get(MainActivityViewModel::class.java)
 
         mainActivityViewModel.initialized.observe(viewLifecycleOwner, Observer{ initialized ->
-            if (initialized) {
-                val showMap = mainActivityViewModel.isLocationEnabled.value?.let {it} ?: false
-                val tabIndex = if (showMap) 0 else 1
-                binding.tabs.selectTab(binding.tabs.getTabAt(tabIndex))
-                binding.maplistToggle.visibility = View.VISIBLE
-                binding.progressOverlay.visibility = View.GONE
-            }
+            if (!initialized) { return@Observer }
+            showProgressSpinner(false)
         })
     }
 
     // View Configuration
-    private fun configureInitialUI(){
-        binding.maplistToggle.visibility = View.GONE
-        binding.progressOverlay.visibility = View.VISIBLE
+    private fun showProgressSpinner(show: Boolean){
+        binding.maplistToggle.visibility = if (show) View.GONE else View.VISIBLE
+        binding.progressOverlay.visibility = if (show) View.VISIBLE else View.GONE
     }
 }
