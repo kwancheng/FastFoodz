@@ -7,9 +7,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.recyclerview.widget.ListAdapter
 
 import com.gk.fastfoodz.R
 import com.gk.fastfoodz.databinding.BusinessesListRecylerFragmentBinding
+import com.gk.fastfoodz.network.Business
 
 class BusinessesListRecylerFragment : Fragment() {
 
@@ -36,5 +38,8 @@ class BusinessesListRecylerFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(BusinessesListRecylerViewModel::class.java)
     }
-
 }
+
+//class BusinessItemsAdapter: ListAdapter<Business, BusinessItemHolder>(){}
+//
+//data class BusinessItemHolder(val view: View): RecyclerV

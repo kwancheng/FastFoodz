@@ -7,7 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.gk.fastfoodz.MainActivityViewModel
 import com.gk.fastfoodz.R
 import com.gk.fastfoodz.businesseslist.pagerfragments.BusinessesListMapFragment
 import com.gk.fastfoodz.businesseslist.pagerfragments.BusinessesListRecylerFragment
@@ -20,6 +22,7 @@ class BusinessesListFragment : Fragment() {
         fun newInstance() = BusinessesListFragment()
     }
 
+    private lateinit var mainActivityViewModel: MainActivityViewModel
     private lateinit var viewModel: BusinessesListViewModel
     private lateinit var binding: BusinessesListFragmentBinding
     private lateinit var mapFragment: BusinessesListMapFragment
@@ -45,10 +48,30 @@ class BusinessesListFragment : Fragment() {
             tab.text = if (position == 1) "List" else "Map"
         }.attach()
 
+        configureInitialUI()
+
         return binding.root
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        mainActivityViewModel = ViewModelProvider(requireActivity()).get(MainActivityViewModel::class.java)
+
+        mainActivityViewModel.initialized.observe(viewLifecycleOwner, Observer{ initialized ->
+            if (initialized) {
+                val showMap = mainActivityViewModel.isLocationEnabled.value?.let {it} ?: false
+                val tabIndex = if (showMap) 0 else 1
+                binding.tabs.selectTab(binding.tabs.getTabAt(tabIndex))
+                binding.maplistToggle.visibility = View.VISIBLE
+                binding.progressOverlay.visibility = View.GONE
+            }
+        })
+    }
+
+    // View Configuration
+    private fun configureInitialUI(){
+        binding.maplistToggle.visibility = View.GONE
+        binding.progressOverlay.visibility = View.VISIBLE
     }
 }

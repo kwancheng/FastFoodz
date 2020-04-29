@@ -34,7 +34,7 @@ object YelpNetwork {
             latitude: Double,
             longitude: Double
         ): List<Business>? =
-            suspendCoroutine<List<Business>?> {
+            suspendCoroutine<List<Business>?> {continuation ->
                 val yelpSearchQuery = YelpSearchQuery(
                     term,
                     radius,
@@ -65,11 +65,11 @@ object YelpNetwork {
                                 retList.add(item)
                             }
 
-                            it.resume(retList)
+                            continuation.resume(retList)
                         }
 
                         override fun onFailure(e: ApolloException) {
-                            it.resume(null)
+                            continuation.resume(null)
                         }
                     })
             }

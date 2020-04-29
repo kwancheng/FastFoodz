@@ -10,27 +10,35 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import com.gk.fastfoodz.MainActivity
+import com.gk.fastfoodz.SEARCH_RADIUS_METERS
 import com.gk.fastfoodz.network.YelpNetwork
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
+/**
+ * Locator combines the retrieval of users's GPS and performing a search against Yelp
+ */
 class Locator(
     private val mainActivity: MainActivity,
     private val defaultLocation: Location
 ) : LifecycleObserver, LocationCallback() {
-    private val locationPermissionRequestCode = 1
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1
+    private val LOCATION_UPDATE_INTERVAL_MSEC : Long = 10000
+    private val QUERY_COOLDOWN_MSEC: Long = 10000
 
     private val locationClient: FusedLocationProviderClient
     private var lastReceivedLocation: Location? = null
+    private var queryInProgress = false
 
     private val searchJob = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + searchJob)
+    private val searchScope = CoroutineScope(Dispatchers.Main + searchJob)
+
+    // Prevents spamming of Yelp's API in case request location updates returns quickly.
+    private val cooldownJob = Job()
+    private val cooldownScope = CoroutineScope(Dispatchers.Main + cooldownJob)
 
     init {
         mainActivity.lifecycle.addObserver(this)
@@ -43,22 +51,23 @@ class Locator(
             mainActivity, Manifest.permission.ACCESS_FINE_LOCATION)
         val permissionGranted = permissionStatus == PackageManager.PERMISSION_GRANTED
 
+        mainActivity.viewModel.updateIsLocationEnabled(permissionGranted)
+
         if (permissionGranted) {
-            mainActivity.viewModel.updateIsLocationEnabled(true)
             monitorLocationUpdates()
         } else {
             ActivityCompat.requestPermissions(
                 mainActivity,
-                arrayOf<String>(
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ),
-                locationPermissionRequestCode
+                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
             )
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    private fun stop() {}
+    private fun stop() {
+        locationClient.removeLocationUpdates(this)
+    }
 
     /**
      * This method duplicates the method signature in the Activity when permissions are requested
@@ -68,7 +77,7 @@ class Locator(
         permissions: Array<out String>,
         grantResult: IntArray
     ) {
-        if (requestCode != locationPermissionRequestCode) { return }
+        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) { return }
 
         val permissionGranted = grantResult.firstOrNull()?.let {
             it == PackageManager.PERMISSION_GRANTED
@@ -76,52 +85,69 @@ class Locator(
 
         mainActivity.viewModel.updateIsLocationEnabled(permissionGranted)
 
-        // Design Note: this method call startLocationUpdates regardless of the permission status
-        // returned from requesting the the location permission to the user. see startLocationUpdates
-        // for an explanation. Normally we will have code here to re-prompt user of how critical
-        // the permission is to the functioning of the app.
         monitorLocationUpdates()
     }
 
     private fun monitorLocationUpdates() {
+        val hasPermission = mainActivity.viewModel.isLocationEnabled.value?.let {it} ?: false
+        if (!hasPermission) {
+            fetchBusinesses(defaultLocation)
+            return
+        }
+
         locationClient.lastLocation.addOnCompleteListener { locationTask ->
             var loc = defaultLocation
             if (locationTask.isSuccessful && locationTask.result != null)
                 loc = locationTask.result!!
-            mainActivity.viewModel.updateLocation(loc)
+            fetchBusinesses(loc)
         }
 
         val lr = LocationRequest().apply {
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = LOCATION_UPDATE_INTERVAL_MSEC
         }
 
         locationClient.requestLocationUpdates(lr, this, Looper.myLooper())
+    }
+
+    private fun fetchBusinesses(location: Location) {
+        queryInProgress = true
+        searchScope.launch {
+            YelpNetwork.yelpService.searchBusinesses(
+                "burrito",
+                SEARCH_RADIUS_METERS,
+                location.latitude,
+                location.longitude
+            ) ?.let {
+                mainActivity.viewModel.updateBusinesses(it)
+                mainActivity.viewModel.updateInitialized(true) // we have our first data
+                mainActivity.viewModel.updateLocation(location)
+                lastReceivedLocation = location
+            } ?: run {
+                mainActivity.viewModel.updateErrorRetrievingBusinesses(true)
+            }
+
+            cooldownScope.launch {
+                delay(QUERY_COOLDOWN_MSEC)
+                queryInProgress = false
+            }
+        }
     }
 
     // Location Callback Overrides
     override fun onLocationResult(locationResult: LocationResult?) {
         val loc = locationResult?.locations?.first()?.let {it} ?: return
 
+        if (queryInProgress) {
+            return // we ignore location updates until the query is complete
+        }
+
         lastReceivedLocation?.let { lrl ->
+            // Duplicate locations we do not want to run another query on the same location
             if (lrl.latitude == loc.latitude &&
                 lrl.longitude == loc.longitude) return
         }
 
-        // new location is not the same as last received location, we notify all listeners
-        lastReceivedLocation = loc
-
-        scope.launch {
-            YelpNetwork.yelpService.searchBusinesses(
-                "burrito",
-                19312.1, // This is 12 miles in meters
-                loc.latitude,
-                loc.longitude
-            ) ?.let {
-                mainActivity.viewModel.updateBusinesses(it)
-                mainActivity.viewModel.updateInitialized(true)
-            } ?: run {
-                lastReceivedLocation = null
-            }
-        }
+        fetchBusinesses(loc)
     }
 }

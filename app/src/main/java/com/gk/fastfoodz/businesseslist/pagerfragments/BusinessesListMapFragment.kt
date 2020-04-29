@@ -2,6 +2,7 @@ package com.gk.fastfoodz.businesseslist.pagerfragments
 
 import android.content.Context
 import android.graphics.*
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.gk.fastfoodz.LOG_TAG
 import com.gk.fastfoodz.MainActivity
 import com.gk.fastfoodz.R
+import com.gk.fastfoodz.SEARCH_RADIUS_METERS
 import com.gk.fastfoodz.databinding.BusinessesListMapFragmentBinding
 import com.gk.fastfoodz.network.Business
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -28,7 +30,7 @@ import kotlin.math.log10
 
 
 class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
-    private val zoomRadiusMeters = 1000.0
+    private val EQUATOR_LENGTH = 40075004
 
     companion object {
         fun newInstance() = BusinessesListMapFragment()
@@ -58,41 +60,51 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
         return binding.root
     }
 
+    /**
+     * We need to remove the zoom level, right after the first zoom adjustment. Declaring the
+     * observer as a field is the only way to access the instance
+     */
+    private val latestLocationObserver: Observer<Location> = Observer<Location> {
+        if (activity == null || activity !is MainActivity) return@Observer
+        val mainActivity = activity as MainActivity
+
+        val thisFragment = this@BusinessesListMapFragment
+        mainActivity.viewModel.latestLocation.removeObserver(thisFragment.latestLocationObserver)
+
+        val metrics = resources.displayMetrics
+        val mapWidth = binding.mapView.width / metrics.density
+        val latAdjustment = cos(PI * it.latitude / 180.0)
+        val arg = EQUATOR_LENGTH * mapWidth * latAdjustment / (SEARCH_RADIUS_METERS * 256.0)
+        val zoomLevel = log10(arg) / log10(2.0)
+
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+            LatLng(it.latitude, it.longitude),
+            zoomLevel.toFloat()
+        ))
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        if (activity == null || activity !is MainActivity) return
 
-        activity?.let { activity ->
-            (activity as MainActivity).let { mainActivity ->
-                mainActivity.viewModel.latestLocation.observe(this.viewLifecycleOwner, Observer{
-                    val metrics = resources.displayMetrics
-                    val mapWidth = binding.mapView.width / metrics.density
-                    val EQUATOR_LENGTH = 40075004
-                    val latAdjustment = cos(PI * it.latitude / 180.0)
-                    val arg = EQUATOR_LENGTH * mapWidth * latAdjustment / (zoomRadiusMeters * 256.0)
-                    val zoomLevel = log10(arg) / log10(2.0)
+        val mainActivity = activity as MainActivity
 
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-                        LatLng(it.latitude, it.longitude),
-                        zoomLevel.toFloat()
-                    ))
-                })
+        mainActivity.viewModel.latestLocation.observe(viewLifecycleOwner, latestLocationObserver)
 
-                mainActivity.viewModel.businesses.observe(this.viewLifecycleOwner, Observer { businesses ->
-                    val bm = BitmapFactory.decodeResource(resources, R.drawable.mappin)
-                    businesses.forEach {
-                        val lat = it.coordinate?.latitude
-                        val lng = it.coordinate?.longitude
-                        if (lat != null && lng != null) {
-                            val marker = googleMap.addMarker(MarkerOptions()
-                                .position(LatLng(lat, lng))
-                                .icon(BitmapDescriptorFactory.fromBitmap(bm))
-                            )
-                            marker.tag = it
-                        }
-                    }
-                })
+        mainActivity.viewModel.businesses.observe(viewLifecycleOwner, Observer { businesses ->
+            val bm = BitmapFactory.decodeResource(resources, R.drawable.mappin)
+            businesses.forEach {
+                val lat = it.coordinate?.latitude
+                val lng = it.coordinate?.longitude
+                if (lat != null && lng != null) {
+                    val marker = googleMap.addMarker(MarkerOptions()
+                        .position(LatLng(lat, lng))
+                        .icon(BitmapDescriptorFactory.fromBitmap(bm))
+                    )
+                    marker.tag = it
+                }
             }
-        }
+        })
     }
 
     private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
