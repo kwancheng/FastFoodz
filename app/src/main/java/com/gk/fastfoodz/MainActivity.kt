@@ -16,19 +16,29 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.gk.fastfoodz.network.YelpNetwork
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.MapsInitializer
 import kotlinx.coroutines.*
 
+const val LOG_TAG = "fastfoodz-log"
+const val SEARCH_RADIUS_METERS = 19312.1 // AKA 12 Miles
+
 class MainActivity : AppCompatActivity(), LifecycleObserver {
+    private val initialLocation: Location
+        get() {
+            return Location("").apply {
+                latitude = 40.758896
+                longitude = -73.985130
+            }
+        }
+
     internal lateinit var viewModel: MainActivityViewModel
-    private lateinit var ffLocationManager: FFLocationManager
+    private lateinit var locator: Locator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         viewModel = ViewModelProvider(this).get(MainActivityViewModel::class.java)
-        ffLocationManager = FFLocationManager(this)
+        locator = Locator(this, initialLocation)
         lifecycle.addObserver(this)
 
         val navController = this.findNavController(R.id.navHostFragment)
@@ -42,13 +52,13 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        ffLocationManager.onRequestPermissionResult(requestCode, permissions, grantResults)
+        locator.onRequestPermissionResult(requestCode, permissions, grantResults)
     }
 
     override fun onSupportNavigateUp(): Boolean {
         val navController = this.findNavController(R.id.navHostFragment)
 
-        Log.i("fastfoodz", "Current Destination ${navController.currentDestination}")
+        Log.i(LOG_TAG, "Current Destination ${navController.currentDestination}")
 
         return navController.navigateUp()
     }
@@ -57,145 +67,142 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
 /***
  * Organizes all the location stuff into this class.
  */
-class FFLocationManager(private val mainActivity: MainActivity) : LifecycleObserver, LocationCallback() {
-    private var searchJob = Job()
-    private val scope = CoroutineScope(Dispatchers.Main + searchJob)
-    internal val locationPermissionRequestCode = 1
+class Locator(
+    private val mainActivity: MainActivity,
+    private val defaultLocation: Location
+) : LifecycleObserver, LocationCallback() {
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1
+    private val LOCATION_UPDATE_INTERVAL_MSEC : Long = 10000
+    private val QUERY_COOLDOWN_MSEC: Long = 10000
 
-    /**
-     * Fast Foodz's default location if user's location cannot be found
-     */
-    private val initialLocation: Location
-        get() {
-            val loc = Location("")
-            loc.latitude = 40.758896
-            loc.longitude = -73.985130
-            return loc
-        }
-
-    private var locationClient: FusedLocationProviderClient
+    private val locationClient: FusedLocationProviderClient
     private var lastReceivedLocation: Location? = null
+    private var queryInProgress = false
+
+    private val searchJob = Job()
+    private val searchScope = CoroutineScope(Dispatchers.Main + searchJob)
+
+    // Prevents spamming of Yelp's API in case request location updates returns quickly.
+    private val cooldownJob = Job()
+    private val cooldownScope = CoroutineScope(Dispatchers.Main + cooldownJob)
 
     init {
         mainActivity.lifecycle.addObserver(this)
         locationClient = FusedLocationProviderClient(mainActivity)
     }
 
-    /**
-     * When the activity starts, we initialize the Fused Location Provider
-     */
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    private fun startLocation() {
+    private fun start() {
         val permissionStatus = ContextCompat.checkSelfPermission(
-            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        val isPermissionGranted = permissionStatus == PackageManager.PERMISSION_GRANTED
-        mainActivity.viewModel.updateHasLocationPermission(isPermissionGranted)
+            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION)
+        val permissionGranted = permissionStatus == PackageManager.PERMISSION_GRANTED
 
-        if (isPermissionGranted) {
-            startLocationUpdates()
+        mainActivity.viewModel.updateHasLocationPermission(permissionGranted)
+
+        if (permissionGranted) {
+            monitorLocationUpdates()
         } else {
             ActivityCompat.requestPermissions(
-                mainActivity, arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
-                locationPermissionRequestCode
+                mainActivity,
+                arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_REQUEST_CODE
             )
         }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    private fun stopLocation() {
+    private fun stop() {
         locationClient.removeLocationUpdates(this)
     }
 
-    private fun startLocationUpdates() {
-        locationClient.lastLocation.addOnCompleteListener { it ->
-            val loc = it.result?.let { location ->
-                if (it.isSuccessful) {
-                    location
-                } else {
-                    initialLocation
-                }
-            } ?: initialLocation
-
-            mainActivity.viewModel.update(loc)
-
-            val lr = LocationRequest()
-            lr.apply {
-                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-                interval = 10000
-            }
-
-            locationClient.requestLocationUpdates(
-                lr,
-                this,
-                Looper.myLooper()
-            )
-        }
-    }
-
-    override fun onLocationResult(locationResult: LocationResult?) {
-        Log.i("fastfoodz", "Location Updated")
-        val location =
-            locationResult?.locations?.first()?.let { loc -> loc } ?: return
-
-        lastReceivedLocation?.let { lastReceivedLocation ->
-            if (lastReceivedLocation.latitude == location.latitude &&
-                lastReceivedLocation.longitude == location.longitude
-            ) return
-        }
-
-        // new location and its not the same as the last received location
-        lastReceivedLocation = location
-        Log.i("fastfoodz", "Querying")
-        fetchBusinesses(location)
-    }
-
-    private fun fetchBusinesses(location: Location) {
-        scope.launch {
-            val businesses = YelpNetwork.yelpService.searchBusinesses(
-                "burrito",
-                19312.1,
-                location.latitude,
-                location.longitude
-            )
-            if (businesses != null) {
-                mainActivity.viewModel.update(businesses)
-                mainActivity.viewModel.update(true)
-            } else {
-                val text = "Failed to Retrieve Businesses"
-                val duration = Toast.LENGTH_SHORT
-
-                val toast = Toast.makeText(mainActivity, text, duration)
-                toast.show()
-                lastReceivedLocation = null
-            }
-        }
-    }
-
     /**
-     * This duplicates the method signature in the Activity when permissions are requested.
+     * This method duplicates the method signature in the Activity when permissions are requested
      */
-    internal fun onRequestPermissionResult(
+    fun onRequestPermissionResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray
+        grantResult: IntArray
     ) {
-        // We only care for permission requested by this class.
-        if (requestCode != locationPermissionRequestCode) {
-            return
-        }
+        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) { return }
 
-        val permissionGranted = grantResults.firstOrNull()?.let {
+        val permissionGranted = grantResult.firstOrNull()?.let {
             it == PackageManager.PERMISSION_GRANTED
         } ?: false
 
         mainActivity.viewModel.updateHasLocationPermission(permissionGranted)
 
-        if (permissionGranted) {
-            startLocationUpdates()
-        } else {
-            mainActivity.viewModel.update(initialLocation)
-            fetchBusinesses(initialLocation)
+        monitorLocationUpdates()
+    }
+
+    private fun monitorLocationUpdates() {
+        val permissionStatus = ContextCompat.checkSelfPermission(
+            mainActivity, Manifest.permission.ACCESS_FINE_LOCATION)
+        val permissionGranted = permissionStatus == PackageManager.PERMISSION_GRANTED
+
+        if (!permissionGranted) {
+            fetchBusinesses(defaultLocation)
+            return
+        }
+
+        locationClient.lastLocation.addOnCompleteListener { locationTask ->
+            var loc = defaultLocation
+            if (locationTask.isSuccessful && locationTask.result != null) {
+                loc = locationTask.result!!
+            }
+            fetchBusinesses(loc)
+        }
+
+        val lr = LocationRequest().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            interval = LOCATION_UPDATE_INTERVAL_MSEC
+        }
+
+        locationClient.requestLocationUpdates(lr, this, Looper.myLooper())
+    }
+
+    // Location Callback Overrides
+    override fun onLocationResult(locationResult: LocationResult?) {
+        val loc = locationResult?.locations?.first()?.let {it} ?: return
+
+        if (queryInProgress) {
+            return // we ignore location updates until the query is complete
+        }
+
+        lastReceivedLocation?.let { lrl ->
+            // Duplicate locations we do not want to run another query on the same location
+            if (lrl.latitude == loc.latitude &&
+                lrl.longitude == loc.longitude) return
+        }
+
+        fetchBusinesses(loc)
+    }
+
+    fun fetchBusinesses(location: Location) {
+        queryInProgress = true
+        searchScope.launch {
+            YelpNetwork.yelpService.searchBusinesses(
+                "burrito",
+                SEARCH_RADIUS_METERS,
+                location.latitude,
+                location.longitude
+            ) ?.let {
+                mainActivity.viewModel.update(it)
+                mainActivity.viewModel.update(true) // we have our first data
+                lastReceivedLocation = location
+            } ?: run {
+                // result is null. Implies an error
+                // we don't reset lastReceivedLocation on errors. Only on successful queries
+                val text = "Failed To Retrieve Businesses"
+                val duration = Toast.LENGTH_SHORT
+
+                val toast = Toast.makeText(mainActivity, text, duration)
+                toast.show()
+            }
+
+            cooldownScope.launch {
+                delay(QUERY_COOLDOWN_MSEC)
+                queryInProgress = false
+            }
         }
     }
 }

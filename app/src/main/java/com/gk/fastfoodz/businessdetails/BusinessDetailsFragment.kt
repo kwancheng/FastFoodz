@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.databinding.DataBindingUtil
+import com.gk.fastfoodz.MainActivityViewModel
 
 import com.gk.fastfoodz.R
 import com.gk.fastfoodz.databinding.BusinessDetailsFragmentBinding
@@ -28,6 +29,8 @@ class BusinessDetailsFragment : Fragment(), OnMapReadyCallback {
     companion object {
         fun newInstance() = BusinessDetailsFragment()
     }
+
+    private lateinit var mainActivityViewModel : MainActivityViewModel
 
     private lateinit var viewModel: BusinessDetailsViewModel
     private lateinit var binding: BusinessDetailsFragmentBinding
@@ -62,9 +65,14 @@ class BusinessDetailsFragment : Fragment(), OnMapReadyCallback {
         return binding.root
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        mainActivityViewModel = ViewModelProvider(requireActivity()).get(MainActivityViewModel::class.java)
+    }
+
     override fun onMapReady(googleMap: GoogleMap?) {
-        googleMap?.let {
-            this.googleMap = it
+        googleMap?.let { googleMap ->
+            this.googleMap = googleMap
 
             val latitude = business?.coordinate?.latitude
             val longitude = business?.coordinate?.longitude
@@ -77,7 +85,13 @@ class BusinessDetailsFragment : Fragment(), OnMapReadyCallback {
                 this.googleMap.addMarker(MarkerOptions().position(homelatLng))
             }
 
-            this.googleMap.isMyLocationEnabled = true
+            val hasLocationPermission = mainActivityViewModel
+                .hasLocationPermission
+                .value?.let { it } ?: false
+
+            if (hasLocationPermission) {
+                this.googleMap.isMyLocationEnabled = true
+            }
         }
     }
 

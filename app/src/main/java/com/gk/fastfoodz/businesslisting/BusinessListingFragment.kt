@@ -38,24 +38,14 @@ class BusinessListingFragment : Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
 
         adapter = BusinessCardListingAdapter { model, rootview ->
-            val hasLocationPermission = mainActivityViewModel.hasLocationPermission.value?.let{it} ?: false
+            val direction = BusinessListingFragmentDirections.
+            actionBusinessListingFragmentToBusinessDetailsFragment(model.business, model.business.name ?: "")
 
-            if (hasLocationPermission) {
-                val direction = BusinessListingFragmentDirections.
-                actionBusinessListingFragmentToBusinessDetailsFragment(model.business, model.business.name ?: "")
+            val extras = FragmentNavigatorExtras(
+                rootview to rootview.transitionName
+            )
 
-                val extras = FragmentNavigatorExtras(
-                    rootview to rootview.transitionName
-                )
-
-                findNavController().navigate(direction, extras)
-            } else {
-                val text = "Need Location Permission before details can be shown"
-                val duration = Toast.LENGTH_SHORT
-
-                val toast = Toast.makeText(requireContext(), text, duration)
-                toast.show()
-            }
+            findNavController().navigate(direction, extras)
         }
         binding.businessList.adapter = adapter
 
@@ -64,7 +54,7 @@ class BusinessListingFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        mainActivityViewModel = ViewModelProvider(activity!!).get(MainActivityViewModel::class.java)
+        mainActivityViewModel = ViewModelProvider(requireActivity()).get(MainActivityViewModel::class.java)
         mainActivityViewModel.businesses.observe(viewLifecycleOwner, Observer {businesses ->
             adapter.businesses = businesses
         })

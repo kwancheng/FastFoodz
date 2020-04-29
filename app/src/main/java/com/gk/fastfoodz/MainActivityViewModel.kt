@@ -15,11 +15,9 @@ class MainActivityViewModel : ViewModel() {
     fun update(location: Location) {
         val currentLocation = _latestGpsLocation.value
         if (currentLocation == null) {
-            Log.i("fastfoodz", "Location Updated")
             _latestGpsLocation.value = location
         } else if (currentLocation.latitude != location.latitude ||
                 currentLocation.longitude != location.longitude) {
-            Log.i("fastfoodz", "Location Updated")
             _latestGpsLocation.value = location
         }
     }
