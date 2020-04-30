@@ -29,14 +29,14 @@ object YelpNetwork {
 
     object yelpService {
         suspend fun searchBusinesses(
-            term: String,
+            categories: String,
             radius: Double,
             latitude: Double,
             longitude: Double
         ): List<Business>? =
             suspendCoroutine<List<Business>?> {continuation ->
                 val yelpSearchQuery = YelpSearchQuery(
-                    term,
+                    categories,
                     radius,
                     latitude,
                     longitude,
@@ -71,7 +71,7 @@ object YelpNetwork {
                                     ),
                                     business?.distance,
                                     business?.price,
-                                    business?.reviews?.first()?.text,
+                                    business?.reviews?.firstOrNull()?.text,
                                     business?.photos?.firstOrNull(),
                                     business?.phone,
                                     categories

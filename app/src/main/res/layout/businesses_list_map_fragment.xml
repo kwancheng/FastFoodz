@@ -9,7 +9,6 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#4CAF50"
         tools:context=".businesseslist.pagerfragments.BusinessesListMapFragment">
 
         <com.google.android.gms.maps.MapView

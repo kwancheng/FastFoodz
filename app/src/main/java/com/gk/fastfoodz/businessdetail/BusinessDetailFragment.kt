@@ -66,6 +66,11 @@ class BusinessDetailFragment : Fragment(), OnMapReadyCallback {
 
         binding.callButton.setOnClickListener {
             viewModel.business?.phone?.let { phone ->
+                if (phone.isEmpty()) {
+                    Toast.makeText(requireContext(), "No Phone Number on File", Toast.LENGTH_SHORT).show()
+                    return@let
+                }
+
                 val dialIntent = Intent(Intent.ACTION_DIAL)
                 dialIntent.data = Uri.parse("tel:" + phone)
                 startActivity(dialIntent)

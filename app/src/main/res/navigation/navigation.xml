@@ -21,6 +21,7 @@
     <fragment
         android:id="@+id/businessDetailFragment"
         android:name="com.gk.fastfoodz.businessdetail.BusinessDetailFragment"
+        android:label="Details"
         tools:layout="@layout/business_detail_fragment">
         <argument
             android:name="business"

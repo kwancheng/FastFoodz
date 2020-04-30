@@ -114,7 +114,7 @@ class Locator(
         queryInProgress = true
         searchScope.launch {
             YelpNetwork.yelpService.searchBusinesses(
-                "burrito",
+                "burgers, pizza, mexican, chinese",
                 SEARCH_RADIUS_METERS,
                 location.latitude,
                 location.longitude

@@ -1,6 +1,6 @@
-query YelpSearchQuery($term: String!, $radius: Float!, $latitude: Float!, $longitude: Float!, $sortby: String!)
+query YelpSearchQuery($categories: String!, $radius: Float!, $latitude: Float!, $longitude: Float!, $sortby: String!)
 {
-    search(term: $term, radius: $radius, latitude: $latitude, longitude: $longitude, sort_by: $sortby)
+    search(categories: $categories, radius: $radius, latitude: $latitude, longitude: $longitude, sort_by: $sortby)
     {
         total
         business {
