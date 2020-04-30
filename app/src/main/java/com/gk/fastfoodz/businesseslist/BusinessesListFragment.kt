@@ -19,7 +19,7 @@ import com.gk.fastfoodz.databinding.BusinessesListFragmentBinding
 import com.google.android.material.tabs.TabLayoutMediator
 
 class BusinessesListFragment : Fragment() {
-    private val DEFAULT_TAB = 1
+    private val DEFAULT_TAB = 0
 
     companion object {
         fun newInstance() = BusinessesListFragment()

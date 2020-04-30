@@ -1,6 +1,8 @@
 package com.gk.fastfoodz.businesseslist.pagerfragments
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.*
 import android.location.Location
 import android.os.Bundle
@@ -8,6 +10,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -15,10 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.gk.fastfoodz.LOG_TAG
-import com.gk.fastfoodz.MainActivity
-import com.gk.fastfoodz.R
-import com.gk.fastfoodz.SEARCH_RADIUS_METERS
+import com.gk.fastfoodz.*
 import com.gk.fastfoodz.businesseslist.BusinessesListFragmentDirections
 import com.gk.fastfoodz.databinding.BusinessesListMapFragmentBinding
 import com.gk.fastfoodz.network.Business
@@ -38,6 +38,7 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
         fun newInstance() = BusinessesListMapFragment()
     }
 
+    private lateinit var mainActivityViewModel: MainActivityViewModel
     private lateinit var viewModel: BusinessesListMapViewModel
     private lateinit var binding: BusinessesListMapFragmentBinding
 
@@ -58,6 +59,8 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
         binding.mapView.onCreate(savedInstanceState)
         binding.mapView.onResume()
         binding.mapView.getMapAsync(this)
+
+
 
         return binding.root
     }
@@ -83,6 +86,14 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
             LatLng(it.latitude, it.longitude),
             zoomLevel.toFloat()
         ))
+
+        val permissionStatus = ContextCompat.checkSelfPermission(
+            requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
+        val hasLocationPermission = permissionStatus == PackageManager.PERMISSION_GRANTED
+
+        if (hasLocationPermission) {
+            this.googleMap.isMyLocationEnabled = true
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -90,32 +101,7 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
         if (activity == null || activity !is MainActivity) return
 
         val mainActivity = activity as MainActivity
-
-        mainActivity.viewModel.latestLocation.observe(viewLifecycleOwner, latestLocationObserver)
-
-        mainActivity.viewModel.businesses.observe(viewLifecycleOwner, Observer { businesses ->
-            val bm = BitmapFactory.decodeResource(resources, R.drawable.mappin)
-            businesses.forEach {
-                val lat = it.coordinate?.latitude
-                val lng = it.coordinate?.longitude
-                if (lat != null && lng != null) {
-                    val marker = googleMap.addMarker(MarkerOptions()
-                        .position(LatLng(lat, lng))
-                        .icon(BitmapDescriptorFactory.fromBitmap(bm))
-                    )
-                    marker.tag = it
-                }
-            }
-        })
-    }
-
-    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
-        return ContextCompat.getDrawable(context, vectorResId)?.run {
-            setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-            val bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
-            draw(Canvas(bitmap))
-            BitmapDescriptorFactory.fromBitmap(bitmap)
-        }
+        mainActivityViewModel = mainActivity.viewModel
     }
 
     override fun onMapReady(googleMap: GoogleMap?) {
@@ -130,7 +116,34 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
                     }
                 } ?: false
             }
+
             this.googleMap.setOnMarkerClickListener(this)
+
+            binding.root.viewTreeObserver.addOnPreDrawListener( object: ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    if (binding.root.viewTreeObserver.isAlive)
+                        binding.root.viewTreeObserver.removeOnPreDrawListener(this)
+
+                    mainActivityViewModel.latestLocation.observe(viewLifecycleOwner, latestLocationObserver)
+
+                    mainActivityViewModel.businesses.observe(viewLifecycleOwner, Observer { businesses ->
+                        val bm = BitmapFactory.decodeResource(resources, R.drawable.mappin)
+                        businesses.forEach {
+                            val lat = it.coordinate?.latitude
+                            val lng = it.coordinate?.longitude
+                            if (lat != null && lng != null) {
+                                val marker = googleMap.addMarker(MarkerOptions()
+                                    .position(LatLng(lat, lng))
+                                    .icon(BitmapDescriptorFactory.fromBitmap(bm))
+                                )
+                                marker.tag = it
+                            }
+                        }
+                    })
+
+                    return true
+                }
+            })
         }
     }
 

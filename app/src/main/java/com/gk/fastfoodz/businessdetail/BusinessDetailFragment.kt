@@ -77,6 +77,10 @@ class BusinessDetailFragment : Fragment(), OnMapReadyCallback {
         return binding.root
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+    }
+
     override fun onMapReady(googleMap: GoogleMap?) {
         if (googleMap != null) {
             this.googleMap = googleMap
