@@ -51,6 +51,16 @@ object YelpNetwork {
                             val retList = mutableListOf<Business>()
 
                             for (business in businesses) {
+                                val categories = business?.categories?.let { categories ->
+                                    var catList = mutableListOf<String>()
+                                    for (category in categories) {
+                                        category.alias?.let {
+                                            catList.add(it)
+                                        }
+                                    }
+                                    catList
+                                } ?: null
+
                                 val item = Business(
                                     business?.id,
                                     business?.name,
@@ -59,8 +69,12 @@ object YelpNetwork {
                                         business?.coordinates?.latitude,
                                         business?.coordinates?.longitude
                                     ),
+                                    business?.distance,
                                     business?.price,
-                                    business?.reviews?.first()?.text
+                                    business?.reviews?.first()?.text,
+                                    business?.photos?.firstOrNull(),
+                                    business?.phone,
+                                    categories
                                 )
                                 retList.add(item)
                             }

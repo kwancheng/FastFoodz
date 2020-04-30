@@ -7,6 +7,9 @@ import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import com.gk.fastfoodz.databinding.MainActivityBinding
 import com.gk.fastfoodz.utils.Locator
 
@@ -44,6 +47,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, text, duration).show()
             }
         })
+
+        val navController = this.findNavController(R.id.nav_host_fragment_container)
+        NavigationUI.setupActionBarWithNavController(this, navController)
+
+        supportActionBar
     }
 
     override fun onRequestPermissionsResult(
@@ -52,5 +60,9 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         locator.onRequestPermissionResult(requestCode, permissions, grantResults)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return findNavController(R.id.nav_host_fragment_container).navigateUp()
     }
 }

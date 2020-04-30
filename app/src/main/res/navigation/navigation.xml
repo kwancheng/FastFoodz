@@ -8,15 +8,22 @@
     <fragment
         android:id="@+id/businessesListFragment"
         android:name="com.gk.fastfoodz.businesseslist.BusinessesListFragment"
-        android:label="BusinessesListFragment"
+        android:label="Fast Foodz"
         tools:layout="@layout/businesses_list_fragment">
         <action
             android:id="@+id/action_businessesListFragment_to_businessDetailFragment"
-            app:destination="@id/businessDetailFragment" />
+            app:destination="@id/businessDetailFragment"
+            app:enterAnim="@anim/fragment_fade_enter"
+            app:exitAnim="@anim/fragment_fade_exit"
+            app:popEnterAnim="@anim/fragment_fade_enter"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
     </fragment>
     <fragment
         android:id="@+id/businessDetailFragment"
         android:name="com.gk.fastfoodz.businessdetail.BusinessDetailFragment"
-        android:label="BusinessDetailFragment"
-        tools:layout="@layout/business_detail_fragment" />
+        tools:layout="@layout/business_detail_fragment">
+        <argument
+            android:name="business"
+            app:argType="com.gk.fastfoodz.network.Business" />
+    </fragment>
 </navigation>

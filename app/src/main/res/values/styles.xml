@@ -7,11 +7,10 @@
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
         <item name="colorAccent">@color/primaryLightColor</item>
 
-        <item name="toolbarStyle">@style/AppTheme.Toolbar</item>
+<!--        <item name="toolbarStyle">@style/AppTheme.Toolbar</item>-->
     </style>
 
-    <style name="AppTheme.Toolbar" parent="Widget.MaterialComponents.Toolbar">
-        <item name="titleTextColor">@android:color/black</item>
+    <style name="AppTheme.Toolbar" parent="Widget.MaterialComponents.ActionBar.Solid">
     </style>
 
 </resources>

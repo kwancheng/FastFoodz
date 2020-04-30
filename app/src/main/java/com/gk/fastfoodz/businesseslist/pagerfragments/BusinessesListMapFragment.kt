@@ -14,10 +14,12 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.gk.fastfoodz.LOG_TAG
 import com.gk.fastfoodz.MainActivity
 import com.gk.fastfoodz.R
 import com.gk.fastfoodz.SEARCH_RADIUS_METERS
+import com.gk.fastfoodz.businesseslist.BusinessesListFragmentDirections
 import com.gk.fastfoodz.databinding.BusinessesListMapFragmentBinding
 import com.gk.fastfoodz.network.Business
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -64,11 +66,11 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
      * We need to remove the zoom level, right after the first zoom adjustment. Declaring the
      * observer as a field is the only way to access the instance
      */
-    private val latestLocationObserver: Observer<Location> = Observer<Location> {
+    private val latestLocationObserver: Observer<Location> = Observer {
         if (activity == null || activity !is MainActivity) return@Observer
         val mainActivity = activity as MainActivity
 
-        val thisFragment = this@BusinessesListMapFragment
+        val thisFragment = this //this@BusinessesListMapFragment
         mainActivity.viewModel.latestLocation.removeObserver(thisFragment.latestLocationObserver)
 
         val metrics = resources.displayMetrics
@@ -134,7 +136,10 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
 
     override fun onMarkerClick(marker: Marker?): Boolean {
         return (marker?.tag as Business).let {
-            Log.i(LOG_TAG, "WAAAAA")
+            val direction = BusinessesListFragmentDirections
+                .actionBusinessesListFragmentToBusinessDetailFragment(it)
+
+            findNavController().navigate(direction)
             true
         } ?: false
     }

@@ -9,21 +9,26 @@ query YelpSearchQuery($term: String!, $radius: Float!, $latitude: Float!, $longi
           phone
           price
           distance
-          categories{
+          categories {
             title
             alias
           }
-          coordinates{
+          coordinates {
             latitude
             longitude
           }
-          location{
+          location {
             formatted_address
+          }
+          categories {
+            title
+            alias
           }
           photos
           reviews {
             text
           }
+          phone
         }
     }
 }

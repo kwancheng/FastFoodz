@@ -9,8 +9,12 @@ data class Business(
     val name: String?,
     val formattedAddress: String?,
     val coordinate: Coordinate?,
+    val distance: Double?,
     val price: String?,
-    val reviewExcerpt: String?
+    val reviewExcerpt: String?,
+    val photoUrl: String?,
+    val phone: String?,
+    val categoriesAliases: List<String>?
 ): Parcelable
 
 @Parcelize
@@ -18,3 +22,4 @@ data class Coordinate(
     val latitude: Double?,
     val longitude: Double?
 ): Parcelable
+
