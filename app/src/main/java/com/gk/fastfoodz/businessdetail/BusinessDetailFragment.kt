@@ -49,7 +49,7 @@ class BusinessDetailFragment : Fragment(), OnMapReadyCallback {
         }
 
         business?.photoUrl?.let { photoUrl ->
-            Picasso.with(requireContext()).load(photoUrl).into(binding.venueImage)
+            Picasso.get().load(photoUrl).into(binding.venueImage)
         }
 
         // Initializing the Map
