@@ -9,8 +9,10 @@ A List of Notables:
 * GraphQL - [Yelp's GraphQL Introduction](https://www.yelp.com/developers/graphql/guides/intro)
 * Apollo - The Apollo github page had a very ambigous statement on where to put the graphql files. Once I figured it out, it was a pleasure to use. Prior to that it was epic level of frustration.
 
+Video Demo  
 [![Demo](http://img.youtube.com/vi/ClJlsKu7ERU/0.jpg)](https://www.youtube.com/watch?v=ClJlsKu7ERU "Demo")
 
+Screen Shots  
 [<img src="Images/ScreenShot01.png" width="200"/>]()
 [<img src="Images/ScreenShot02.png" width="200"/>]()
 [<img src="Images/ScreenShot03.png" width="200"/>]()
