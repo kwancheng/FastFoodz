@@ -113,7 +113,7 @@ class Locator(
     private fun fetchBusinesses(location: Location) {
         queryInProgress = true
         searchScope.launch {
-            YelpNetwork.yelpService.searchBusinesses(
+            YelpNetwork.YelpService.searchBusinesses(
                 "burgers, pizza, mexican, chinese",
                 SEARCH_RADIUS_METERS,
                 location.latitude,
