@@ -30,15 +30,13 @@ class BusinessesListRecylerFragment : Fragment() {
         fun newInstance() = BusinessesListRecylerFragment()
     }
 
-    private lateinit var viewModel: BusinessesListRecylerViewModel
     private lateinit var binding: BusinessesListRecylerFragmentBinding
     private lateinit var adapter: BusinessItemListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        viewModel = ViewModelProvider(this).get(BusinessesListRecylerViewModel::class.java)
+    ): View {
         binding = DataBindingUtil.inflate<BusinessesListRecylerFragmentBinding>(
             inflater,
             R.layout.businesses_list_recyler_fragment,

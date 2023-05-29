@@ -89,7 +89,7 @@ class Locator(
     }
 
     private fun monitorLocationUpdates() {
-        val hasPermission = mainActivity.viewModel.isLocationEnabled.value?.let {it} ?: false
+        val hasPermission = mainActivity.viewModel.isLocationEnabled.value ?: false
         if (!hasPermission) {
             fetchBusinesses(defaultLocation)
             return
