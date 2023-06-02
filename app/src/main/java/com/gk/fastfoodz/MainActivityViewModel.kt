@@ -7,15 +7,6 @@ import androidx.lifecycle.ViewModel
 import com.gk.fastfoodz.network.Business
 
 class MainActivityViewModel: ViewModel() {
-    // Indicates the loading status
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean>
-        get() = _isLoading
-
-    fun updateIsLoading(isLoading: Boolean) {
-        _isLoading.value = isLoading
-    }
-
     // Indicates if location permission is given by the user
     private val _isLocationEnabled = MutableLiveData<Boolean>()
     val isLocationEnabled: LiveData<Boolean>

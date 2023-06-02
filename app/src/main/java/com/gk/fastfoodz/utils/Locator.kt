@@ -89,7 +89,7 @@ class Locator(
     }
 
     private fun monitorLocationUpdates() {
-        val hasPermission = mainActivity.viewModel.isLocationEnabled.value?.let {it} ?: false
+        val hasPermission = mainActivity.viewModel.isLocationEnabled.value ?: false
         if (!hasPermission) {
             fetchBusinesses(defaultLocation)
             return
@@ -113,7 +113,7 @@ class Locator(
     private fun fetchBusinesses(location: Location) {
         queryInProgress = true
         searchScope.launch {
-            YelpNetwork.yelpService.searchBusinesses(
+            YelpNetwork.YelpService.searchBusinesses(
                 "burgers, pizza, mexican, chinese",
                 SEARCH_RADIUS_METERS,
                 location.latitude,

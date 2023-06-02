@@ -21,12 +21,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 class BusinessesListFragment : Fragment() {
     private val DEFAULT_TAB = 0
 
-    companion object {
-        fun newInstance() = BusinessesListFragment()
-    }
-
     private lateinit var mainActivityViewModel: MainActivityViewModel
-    private lateinit var viewModel: BusinessesListViewModel
     private lateinit var binding: BusinessesListFragmentBinding
     private lateinit var mapFragment: BusinessesListMapFragment
     private lateinit var listFragment: BusinessesListRecylerFragment
@@ -35,7 +30,6 @@ class BusinessesListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewModel = ViewModelProvider(this).get(BusinessesListViewModel::class.java)
         binding = DataBindingUtil.inflate(inflater, R.layout.businesses_list_fragment, container, false)
 
         mapFragment = BusinessesListMapFragment.newInstance()

@@ -1,35 +1,37 @@
 package com.gk.fastfoodz.businesseslist.pagerfragments
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.gk.fastfoodz.*
+import com.gk.fastfoodz.MainActivity
+import com.gk.fastfoodz.MainActivityViewModel
+import com.gk.fastfoodz.R
+import com.gk.fastfoodz.SEARCH_RADIUS_METERS
 import com.gk.fastfoodz.businesseslist.BusinessesListFragmentDirections
 import com.gk.fastfoodz.databinding.BusinessesListMapFragmentBinding
 import com.gk.fastfoodz.network.Business
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.log10
-
 
 class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     private val EQUATOR_LENGTH = 40075004
@@ -39,7 +41,6 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
     }
 
     private lateinit var mainActivityViewModel: MainActivityViewModel
-    private lateinit var viewModel: BusinessesListMapViewModel
     private lateinit var binding: BusinessesListMapFragmentBinding
 
     private lateinit var googleMap: GoogleMap
@@ -47,9 +48,8 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        viewModel = ViewModelProvider(this).get(BusinessesListMapViewModel::class.java)
-        binding = DataBindingUtil.inflate<BusinessesListMapFragmentBinding>(
+    ): View {
+        binding = DataBindingUtil.inflate(
             inflater,
             R.layout.businesses_list_map_fragment,
             container,
@@ -59,8 +59,6 @@ class BusinessesListMapFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMa
         binding.mapView.onCreate(savedInstanceState)
         binding.mapView.onResume()
         binding.mapView.getMapAsync(this)
-
-
 
         return binding.root
     }

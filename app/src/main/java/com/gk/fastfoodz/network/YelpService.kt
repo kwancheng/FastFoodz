@@ -27,14 +27,14 @@ object YelpNetwork {
         .okHttpClient(httpClient)
         .build()
 
-    object yelpService {
+    object YelpService {
         suspend fun searchBusinesses(
             categories: String,
             radius: Double,
             latitude: Double,
             longitude: Double
         ): List<Business>? =
-            suspendCoroutine<List<Business>?> {continuation ->
+            suspendCoroutine { continuation ->
                 val yelpSearchQuery = YelpSearchQuery(
                     categories,
                     radius,
@@ -46,20 +46,20 @@ object YelpNetwork {
                 apolloClient.query(yelpSearchQuery)
                     .enqueue(object : ApolloCall.Callback<YelpSearchQuery.Data>() {
                         override fun onResponse(response: Response<YelpSearchQuery.Data>) {
-                            val businesses = response.data()?.search?.business.let { it } ?: return
+                            val businesses = response.data()?.search?.business ?: return
 
                             val retList = mutableListOf<Business>()
 
                             for (business in businesses) {
                                 val categories = business?.categories?.let { categories ->
-                                    var catList = mutableListOf<String>()
+                                    val catList = mutableListOf<String>()
                                     for (category in categories) {
                                         category.alias?.let {
                                             catList.add(it)
                                         }
                                     }
                                     catList
-                                } ?: null
+                                }
 
                                 val item = Business(
                                     business?.id,

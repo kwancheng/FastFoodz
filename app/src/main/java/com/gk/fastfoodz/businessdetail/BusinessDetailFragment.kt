@@ -27,10 +27,6 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.squareup.picasso.Picasso
 
 class BusinessDetailFragment : Fragment(), OnMapReadyCallback {
-    companion object {
-        fun newInstance() = BusinessDetailFragment()
-    }
-
     private lateinit var viewModel: BusinessDetailViewModel
     private lateinit var binding: BusinessDetailFragmentBinding
     private lateinit var googleMap: GoogleMap
@@ -90,8 +86,8 @@ class BusinessDetailFragment : Fragment(), OnMapReadyCallback {
         if (googleMap != null) {
             this.googleMap = googleMap
 
-            val latitude = viewModel?.business?.coordinate?.latitude
-            val longitude = viewModel?.business?.coordinate?.longitude
+            val latitude = viewModel.business?.coordinate?.latitude
+            val longitude = viewModel.business?.coordinate?.longitude
 
             if (latitude != null && longitude != null) {
                 val homelatLng = LatLng(latitude, longitude)
